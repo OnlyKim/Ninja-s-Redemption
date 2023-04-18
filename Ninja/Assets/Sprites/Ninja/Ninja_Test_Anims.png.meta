@@ -33,7 +33,7 @@ TextureImporter:
   maxTextureSize: 2048
   textureSettings:
     serializedVersion: 2
-    filterMode: 1
+    filterMode: 0
     aniso: 1
     mipBias: 0
     wrapU: 1
@@ -113,7 +113,7 @@ TextureImporter:
         width: 53
         height: 94
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -398,6 +398,27 @@ TextureImporter:
       indices: 
       edges: []
       weights: []
+    - serializedVersion: 2
+      name: Ninja_Test_Anims_14
+      rect:
+        serializedVersion: 2
+        x: 4
+        y: 110
+        width: 57
+        height: 77
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d3f483ae0ab0a9c4b888369758a4a4e1
+      internalID: -1945161325
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
     outline: []
     physicsShape: []
     bones: []
@@ -415,6 +436,7 @@ TextureImporter:
       Ninja_Test_Anims_11: -1927010446
       Ninja_Test_Anims_12: -511379067
       Ninja_Test_Anims_13: 1983209804
+      Ninja_Test_Anims_14: -1945161325
       Ninja_Test_Anims_2: -1410731672
       Ninja_Test_Anims_3: 394702288
       Ninja_Test_Anims_4: -1912391876

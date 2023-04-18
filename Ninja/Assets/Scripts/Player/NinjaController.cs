@@ -10,22 +10,27 @@ public class NinjaController : MonoBehaviour
     [SerializeField] private GameObject dodgeTarget;
     [SerializeField] private float movementSpeed;
     [SerializeField] private float delayTime;
+	[SerializeField] private HealthBar healthBar;
+
 
     public int playerHP;
-
     public bool isPunching = false;
     public bool isDodging = false;
+
+    [HideInInspector] public int currentHP;
     private bool actionAvaliable = true;
 
     void Start()
     {
         animator = GetComponent<Animator>();
+        currentHP = playerHP;
+        healthBar.SetMaxHealth(playerHP);
     }
 
     void Update()
     {
         //Punch
-        if (Input.GetKeyDown(KeyCode.R) && !isDodging && actionAvaliable)
+        if(Input.GetKeyDown(KeyCode.R) && !isDodging && actionAvaliable)
             StartCoroutine(Punch());
 
 
@@ -34,8 +39,13 @@ public class NinjaController : MonoBehaviour
         //    animator.SetBool("isBlocking", true);
 
         //Dodge
-        if (Input.GetKeyDown(KeyCode.F) && !isPunching && actionAvaliable)
+        if(Input.GetKeyDown(KeyCode.F) && !isPunching && actionAvaliable)
             StartCoroutine(Dodge());
+
+        if(Input.GetKeyDown(KeyCode.V) && !isDodging)
+		{
+            Block();
+		}
 
     }
 
@@ -46,7 +56,7 @@ public class NinjaController : MonoBehaviour
         transform.position = Vector2.MoveTowards(transform.position, punchTarget.transform.position, movementSpeed);
         animator.SetBool("isPunching", true);
         if (FindObjectOfType<EnemyScript>().isBlocking == false)
-            FindObjectOfType<EnemyScript>().enemyHP -= 10;
+            FindObjectOfType<EnemyScript>().EnemyTakeDamage(10);
             
         yield return new WaitForSeconds(0.25f);
         animator.SetBool("isPunching", false);
@@ -71,11 +81,22 @@ public class NinjaController : MonoBehaviour
         StartCoroutine(Delay());
     }
 
+    void Block()
+	{
+
+	}
+
     IEnumerator Delay()
     {
         yield return new WaitForSeconds(delayTime);
         actionAvaliable = true;
     }
+
+    public void TakeDamage(int damage)
+	{
+        currentHP -= damage;
+        healthBar.SetHealth(currentHP);
+	}
 
 
    
