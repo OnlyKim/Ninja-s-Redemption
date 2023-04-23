@@ -1,19 +1,19 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
-//public class PostureBar : MonoBehaviour
-//{
-//    public Slider slider;
+public class PostureBar : MonoBehaviour
+{
+	public Slider postureSlider;
 
-//    public void SetMaxPosture(int posture)
-//    {
-//        slider.maxValue = posture;
-//        slider.value = posture;
-//    }
-//    public void SetPosture(int posture)
-//    {
-//        slider.value = posture;
-//    }
-    
-//}
+	public void SetMinPosture(int posture)
+	{
+		postureSlider.minValue = posture;
+		postureSlider.value = posture;
+	}
+	public void SetPosture(int newPosture)
+	{
+		postureSlider.value = newPosture;
+	}
+}
