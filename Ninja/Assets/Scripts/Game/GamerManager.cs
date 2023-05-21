@@ -5,36 +5,53 @@ using UnityEngine;
 
 public class GamerManager : MonoBehaviour
 {
-    public static GamerManager Instance; 
-    // Start is called before the first frame update
-    //void Start()
-    //{
+    public static GamerManager Instance;
 
-    //}
+    [SerializeField] GameObject victoryPanel;
+    [SerializeField] GameObject defeatPanel;
 
-	private void Awake()
+    [HideInInspector] public bool stopGame = false;
+
+	private void Start()
 	{
-        Instance = this;
-	}
+        victoryPanel.SetActive(false);
+        defeatPanel.SetActive(false);
+    }
 
 	// Update is called once per frame
 	void Update()
     {
-        if (FindObjectOfType<EnemyScript>().enemyHP <= 0)
+      
+
+        if (FindObjectOfType<EnemyScript>().enemyCurrentHP <= 0)
         {
-            Restart();
+            stopGame = true;
+            FindObjectOfType<EnemyScript>().animator.SetBool("isDown", true);
+            StartCoroutine(Delay());
+            victoryPanel.SetActive(true);
+        }
+
+        if(FindFirstObjectByType<NinjaController>().currentHP <= 0)
+		{
+            stopGame = true;
+            FindObjectOfType<NinjaController>().animator.SetBool("isDown", true);
+            StartCoroutine(Delay());
+            defeatPanel.SetActive(true);
         }
     }
 
     public void Restart()
     {
         StartCoroutine(Delay());
-        
     }
+
+    public void LoadMenu()
+	{
+        FindObjectOfType<LevelLoader>().LoadMenu();
+	}
 
     IEnumerator Delay()
     {
-        yield return new WaitForSeconds(3f);
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        yield return new WaitForSeconds(5f);
     }
 }

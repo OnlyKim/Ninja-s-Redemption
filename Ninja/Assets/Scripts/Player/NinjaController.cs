@@ -4,13 +4,13 @@ using UnityEngine;
 
 public class NinjaController : MonoBehaviour
 {
-    [SerializeField] private Animator animator;
     [SerializeField] private GameObject positionTarget;
     [SerializeField] private GameObject punchTarget;
     [SerializeField] private GameObject dodgeTarget;
     [SerializeField] private float movementSpeed;
 	[SerializeField] private HealthBar healthBar;
     [SerializeField] private PostureBar postureBar;
+	[SerializeField] private float startTime;
 
 
     public int playerHP;
@@ -18,6 +18,9 @@ public class NinjaController : MonoBehaviour
     public bool isPunching = false;
     public bool isDodging = false;
     public bool isBlocking = false;
+    public bool wasDamaged = false;
+
+    public Animator animator;
 
     [HideInInspector] public int currentHP;
     [HideInInspector] public int currentPosture;
@@ -36,15 +39,15 @@ public class NinjaController : MonoBehaviour
     void Update()
     {
         //Punch
-        if(Input.GetKeyDown(KeyCode.R) && actionAvaliable)
+        if(Input.GetKeyDown(KeyCode.R) && actionAvaliable && wasDamaged == false && FindAnyObjectByType<GamerManager>().stopGame == false)
             StartCoroutine(Punch());
 
         //Dodge
-        if(Input.GetKeyDown(KeyCode.F) && actionAvaliable)
+        if(Input.GetKeyDown(KeyCode.F) && actionAvaliable && wasDamaged == false && FindAnyObjectByType<GamerManager>().stopGame == false)
             StartCoroutine(Dodge());
 
         //Block
-        if(Input.GetKey(KeyCode.V))
+        if(Input.GetKey(KeyCode.V) && wasDamaged == false && FindAnyObjectByType<GamerManager>().stopGame == false)
 		{
             Block();
         }
@@ -52,7 +55,6 @@ public class NinjaController : MonoBehaviour
 		{
             StartCoroutine(Delay(0.15f));
         }
-
     }
 
     IEnumerator Punch()
@@ -65,10 +67,20 @@ public class NinjaController : MonoBehaviour
         transform.position = Vector2.MoveTowards(transform.position, punchTarget.transform.position, movementSpeed);
         animator.SetBool("isPunching", true);
 
-        if (FindObjectOfType<EnemyScript>().isBlocking == false)
+        if (FindObjectOfType<EnemyScript>().isBlocking == false )
+		{
             FindObjectOfType<EnemyScript>().EnemyTakeDamage(10);
+            FindObjectOfType<EnemyScript>().animator.SetBool("wasDamaged", true);
+            FindObjectOfType<EnemyScript>().wasDamaged = true;
+            DecreasePosture(2);
+            yield return new WaitForSeconds(0.4f);
+            FindObjectOfType<EnemyScript>().animator.SetBool("wasDamaged", false);
+            FindObjectOfType<EnemyScript>().wasDamaged = false;
+            
+        }
+            
         else if(FindObjectOfType<EnemyScript>().isBlocking == true)
-                FindObjectOfType<EnemyScript>().EnemyIncreasePosture(5);
+                FindObjectOfType<EnemyScript>().EnemyIncreasePosture(15);
 
 
 
@@ -100,12 +112,13 @@ public class NinjaController : MonoBehaviour
 		actionAvaliable = false;
 		isBlocking = true;
 		animator.SetBool("isBlocking", true);
-	}
+    }
 
     IEnumerator Delay(float time)
     {
         yield return new WaitForSeconds(time);
         actionAvaliable = true;
+        isBlocking = false;
         animator.SetBool("isBlocking", false);
     }
 
@@ -121,7 +134,28 @@ public class NinjaController : MonoBehaviour
         postureBar.SetPosture(currentPosture);
 	}
 
+ //   public void DecreasePosture(int value)
+	//{
+ //       currentPosture -= value;
+ //       postureBar.SetPosture(currentPosture);
+ //   }
 
-   
-    
+    public void DecreasePosture(int value)
+	{
+        currentPosture -= value;
+        postureBar.SetPosture(currentPosture);
+    }
+
+ //   IEnumerator DecreasePosture2(int value)
+	//{
+ //       yield return new WaitForSeconds(1.4f);
+
+ //       currentPosture -= value;
+ //       postureBar.SetPosture(currentPosture);
+
+ //   }
+
+
+
+
 }

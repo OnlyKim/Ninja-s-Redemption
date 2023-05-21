@@ -4,12 +4,12 @@ using UnityEngine;
 
 public class EnemyScript : MonoBehaviour
 {
-    [SerializeField] private Animator animator;
-
 	[SerializeField] private GameObject attackWarning;
+
 	[SerializeField] private GameObject enemyPositionTarget;
     [SerializeField] private GameObject enemyPunchTarget;
     [SerializeField] private GameObject enemyDodgeTarget;
+
     [SerializeField] private float movementSpeed;
     [SerializeField] private float minActionPeriod;
 	[SerializeField] private float maxActionPeriod;
@@ -23,6 +23,8 @@ public class EnemyScript : MonoBehaviour
     public int punchDamage;
     public bool isPunching = false;
     public bool isBlocking = false;
+	public bool wasDamaged = false;
+	public Animator animator;
 
 	[HideInInspector] public int enemyCurrentHP;
 	[HideInInspector] public int enemyCurrentPosture;
@@ -31,76 +33,54 @@ public class EnemyScript : MonoBehaviour
 	private float actionPeriod;
 	private bool attack = false;
 	private bool defense = false;
-
-	//   void Start()
-	//{
-	//       animator = GetComponent<Animator>();
-	//}
+	private bool enemyActionAvaliable;
 
 	IEnumerator Start()
 	{
 		enemyCurrentHP = enemyHP;
+		enemyActionAvaliable = true;
 		enemyCurrentPosture = 0;
 		attackWarning.SetActive(false);
+		if (enemyCurrentHP <= 0) //Inicia a animação do inimigo derrubado caso a vida dele chegue a 0
+			animator.SetBool("isDown", true);
 		while (true)
 		{
 			attack = false;
 			actionPeriod = Random.Range(minActionPeriod, maxActionPeriod);
 
-			if (enemyHP <= 0) //Inicia a animação do inimigo derrubado caso a vida dele chegue a 0
-				animator.SetBool("isDown", true);
-			if (attack == false && FindAnyObjectByType<NinjaController>().isPunching == true)
+			if (attack == false && FindAnyObjectByType<NinjaController>().isPunching == true && FindAnyObjectByType<GamerManager>().stopGame == false && enemyActionAvaliable)
 			{
 				defense = true;
+				enemyActionAvaliable = false;
 				StartCoroutine(EnemyBlock());
 			}
 
 			yield return new WaitForSeconds(actionPeriod);
 
-			if (enemyHP <= 0) //Inicia a animação do inimigo derrubado caso a vida dele chegue a 0
-				animator.SetBool("isDown", true);
-			//else if (attack == false && FindAnyObjectByType<NinjaController>().isPunching == true)
-			//{
-			//	defense = true;
-			//	StartCoroutine(EnemyBlock());
-			//}
-			else if (defense == false && Random.Range(0, 100) > attackProbability)
+			if (defense == false && Random.Range(0, 100) > attackProbability && FindAnyObjectByType<GamerManager>().stopGame == false && enemyActionAvaliable)
 			{
 				attack = true;
+				enemyActionAvaliable = false;
 				StartCoroutine(EnemyAttack());
 			}
-				
-
-			//bool attack = Random.Range(0, 100) > attackProbability;
-
-			
-
-
-			//else if (attack == true)
-			//	StartCoroutine(EnemyAttack());
 		}
 	}
-
-
-	//void Update()
-	//{
-	//	StartCoroutine(Rand());
-	//	StartCoroutine(Punch());
-	//	StartCoroutine(Block());
-	//}
 
 	IEnumerator EnemyAttack()
 	{
 		attackWarning.SetActive(true);
-		yield return new WaitForSeconds(0.32f);
+		yield return new WaitForSeconds(0.35f);
 		isPunching = true;
 		animator.SetBool("isPunching", true);
-		if (FindObjectOfType<NinjaController>().isDodging == false && FindObjectOfType<NinjaController>().isBlocking == false)
+		if (FindObjectOfType<NinjaController>().isDodging == false && FindObjectOfType<NinjaController>().isBlocking == false && wasDamaged == false && FindAnyObjectByType<GamerManager>().stopGame == false)
 		{
 			FindObjectOfType<NinjaController>().TakeDamage(10);
-
-			//if((FindObjectOfType<NinjaController>().isBlocking))
-			//	FindObjectOfType<NinjaController>().IncreasePosture(5);
+			FindObjectOfType<NinjaController>().animator.SetBool("wasDamaged", true);
+			FindObjectOfType<NinjaController>().wasDamaged = true;
+			DecreasePosture(4);
+			yield return new WaitForSeconds(0.4f);
+			FindObjectOfType<NinjaController>().animator.SetBool("wasDamaged", false);
+			FindObjectOfType<NinjaController>().wasDamaged = false;
 		}
 		else if(FindObjectOfType<NinjaController>().isBlocking)
 			FindObjectOfType<NinjaController>().IncreasePosture(5);
@@ -108,18 +88,11 @@ public class EnemyScript : MonoBehaviour
 
 		yield return new WaitForSeconds(0.25f);
 		isPunching = false;
+		attack = false;
+		enemyActionAvaliable = true;
 		animator.SetBool("isPunching", false);
 		attackWarning.SetActive(false);
 	}
-
-	//IEnumerator Punch()
-	//{
-	//	isPunching = true;
-	//	animator.SetBool("isPunching", true);
-	//	yield return new WaitForSeconds(0.25f);
-	//	isPunching = false;
-	//	animator.SetBool("isPunching", false);
-	//}
 
 	IEnumerator EnemyBlock()
 	{
@@ -129,18 +102,33 @@ public class EnemyScript : MonoBehaviour
 		isBlocking = false;
 		animator.SetBool("isBlocking", false);
 		defense = false;
+		enemyActionAvaliable = true;
 	}
 
 	public void EnemyTakeDamage(int damage)
 	{
+		enemyActionAvaliable = false;
 		enemyCurrentHP -= damage;
 		enemyHealthBar.SetHealth(enemyCurrentHP);
+		StartCoroutine(EnemyDamageDelay(0.8f));
 	}
 
 	public void EnemyIncreasePosture(int value)
 	{
 		enemyCurrentPosture += value;
 		enemyPostureBar.SetPosture(enemyCurrentPosture);
+	}
+
+	void DecreasePosture(int value)
+	{
+		enemyCurrentPosture -= value;
+		enemyPostureBar.SetPosture(enemyCurrentPosture);
+	}
+
+	IEnumerator EnemyDamageDelay(float time)
+	{
+		yield return new WaitForSeconds(time);
+		enemyActionAvaliable = true;
 	}
 
 

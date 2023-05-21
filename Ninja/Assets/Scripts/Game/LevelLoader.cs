@@ -13,6 +13,17 @@ public class LevelLoader : MonoBehaviour
         StartCoroutine(Transition(SceneManager.GetActiveScene().buildIndex + 1));
 	}
 
+    public void LoadMenu()
+	{
+        Time.timeScale = 1f;
+        StartCoroutine(Transition(SceneManager.GetActiveScene().buildIndex - 1));
+    }
+
+    public void RestartFight()
+	{
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+
     IEnumerator Transition(int levelIndex)
 	{
         transitionAnimator.SetTrigger("Start");

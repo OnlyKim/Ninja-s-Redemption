@@ -11,6 +11,16 @@ public class MainMenu : MonoBehaviour
 		FindAnyObjectByType<LevelLoader>().LoadNextLevel();
 	}
 
+	public void ReturnMenu()
+	{
+		FindAnyObjectByType<LevelLoader>().LoadMenu();
+	}
+
+	public void RestartFight()
+	{
+		SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+	}
+
 	public void QuitGame()
 	{
 		Debug.Log("Quit");
