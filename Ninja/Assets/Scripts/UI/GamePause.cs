@@ -19,6 +19,7 @@ public class GamePause : MonoBehaviour
 		}
 	}
 
+	//Verifica se o jogo está no modo PAUSA
 	void Pause()
 	{
 		if(gamePaused == false)

@@ -29,7 +29,7 @@ public class PostureBar : MonoBehaviour
 		postureSlider.minValue = posture;
 		postureSlider.value = posture;
 	}
-	public void SetPosture(int newPosture)
+	public void SetPosture(float newPosture)
 	{
 		postureSlider.value = newPosture;
 	}

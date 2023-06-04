@@ -4,13 +4,18 @@ using UnityEngine;
 
 public class NinjaController : MonoBehaviour
 {
+    [SerializeField] private SpriteRenderer sprite;
     [SerializeField] private GameObject positionTarget;
     [SerializeField] private GameObject punchTarget;
     [SerializeField] private GameObject dodgeTarget;
     [SerializeField] private float movementSpeed;
-	[SerializeField] private HealthBar healthBar;
+    [SerializeField] private HealthBar healthBar;
     [SerializeField] private PostureBar postureBar;
-	[SerializeField] private float startTime;
+    [SerializeField] private float startTime;
+
+    private bool gamePaused;
+    private EnemyScript enemy;
+    private GamerManager gameManager;
 
 
     public int playerHP;
@@ -23,68 +28,94 @@ public class NinjaController : MonoBehaviour
     public Animator animator;
 
     [HideInInspector] public int currentHP;
-    [HideInInspector] public int currentPosture;
+    [HideInInspector] public float currentPosture;
 
     private bool actionAvaliable = true;
+    private bool leftBlock = false;
+    private bool rightBlock = false;
 
-    void Start()
+    private float coef;
+    private bool postureReduction = false;
+    private bool postureLimit = true;
+
+    private void Start()
     {
+        sprite = GetComponent<SpriteRenderer>();
         animator = GetComponent<Animator>();
         currentHP = playerHP;
         currentPosture = 0;
         healthBar.SetMaxHealth(playerHP);
-        postureBar.SetMinPosture(0); 
+        postureBar.SetMinPosture(0);
+
+        gameManager = FindAnyObjectByType<GamerManager>();
+        enemy = FindAnyObjectByType<EnemyScript>();
     }
 
-    void Update()
+    private void Update()
     {
-        //Punch
-        if(Input.GetKeyDown(KeyCode.R) && actionAvaliable && wasDamaged == false && FindAnyObjectByType<GamerManager>().stopGame == false)
-            StartCoroutine(Punch());
-
-        //Dodge
-        if(Input.GetKeyDown(KeyCode.F) && actionAvaliable && wasDamaged == false && FindAnyObjectByType<GamerManager>().stopGame == false)
-            StartCoroutine(Dodge());
-
-        //Block
-        if(Input.GetKey(KeyCode.V) && wasDamaged == false && FindAnyObjectByType<GamerManager>().stopGame == false)
+        if(!gameManager.stopGame && !postureLimit)
 		{
-            Block();
+            //Punch
+            if (Input.GetKeyDown(KeyCode.R) && actionAvaliable && !wasDamaged) //Soco
+                StartCoroutine(Punch());
+
+            //Dodge
+            if (Input.GetKeyDown(KeyCode.F) && actionAvaliable && !wasDamaged) //Esquiva
+                StartCoroutine(Dodge());
+
+            //Bloqueio direita
+            if (Input.GetKey(KeyCode.V) && !wasDamaged && !leftBlock) //Bloqueio
+            {
+                rightBlock = true;
+                Block();
+            }
+            else if (Input.GetKeyUp(KeyCode.V) && !leftBlock) //Delay do Bloqueio ****
+            {
+                StartCoroutine(Delay(0.15f));
+            }
+
+            //Bloqueio esquerda
+            if (Input.GetKey(KeyCode.C) && !wasDamaged && !rightBlock) //Bloqueio
+            {
+                leftBlock = true;
+                Block();
+            }
+            else if (Input.GetKeyUp(KeyCode.C) && !rightBlock) //Delay do Bloqueio ****
+            {
+                StartCoroutine(Delay(0.15f));
+            }
         }
-        else if(Input.GetKeyUp(KeyCode.V))
-		{
-            StartCoroutine(Delay(0.15f));
-        }
+        
     }
 
-    IEnumerator Punch()
+    private IEnumerator Punch()
     {
         actionAvaliable = false;
         isPunching = true;
 
-        yield return new WaitForSeconds(0.15f);
+        yield return new WaitForSeconds(0.10f);
 
         transform.position = Vector2.MoveTowards(transform.position, punchTarget.transform.position, movementSpeed);
         animator.SetBool("isPunching", true);
 
-        if (FindObjectOfType<EnemyScript>().isBlocking == false )
-		{
-            FindObjectOfType<EnemyScript>().EnemyTakeDamage(10);
-            FindObjectOfType<EnemyScript>().animator.SetBool("wasDamaged", true);
-            FindObjectOfType<EnemyScript>().wasDamaged = true;
-            DecreasePosture(2);
+        if (!enemy.isBlocking) //******PASSAR PARA O INIMIGO ******
+        {
+            postureReduction = false;
+            IncreasePosture(10);
+            enemy.EnemyTakeDamage(10);
+            enemy.animator.SetBool("wasDamaged", true);
+            enemy.wasDamaged = true;
+            postureReduction = true;
             yield return new WaitForSeconds(0.4f);
-            FindObjectOfType<EnemyScript>().animator.SetBool("wasDamaged", false);
-            FindObjectOfType<EnemyScript>().wasDamaged = false;
-            
+            StartCoroutine(DecreasePosture(4f));
+            enemy.animator.SetBool("wasDamaged", false);
+            enemy.wasDamaged = false;
         }
-            
-        else if(FindObjectOfType<EnemyScript>().isBlocking == true)
-                FindObjectOfType<EnemyScript>().EnemyIncreasePosture(15);
 
+        else if (enemy.isBlocking)
+            enemy.EnemyIncreasePosture(15);
 
-
-        yield return new WaitForSeconds(0.25f);
+        yield return new WaitForSeconds(0.05f);
         animator.SetBool("isPunching", false);
         transform.position = Vector2.MoveTowards(transform.position, positionTarget.transform.position, movementSpeed);
         isPunching = false;
@@ -93,8 +124,10 @@ public class NinjaController : MonoBehaviour
 
     }
 
-    IEnumerator Dodge()
+    private IEnumerator Dodge()
     {
+        IncreasePosture(2);
+        postureReduction = false;
         actionAvaliable = false;
         isDodging = true;
         transform.position = Vector2.MoveTowards(transform.position, dodgeTarget.transform.position, movementSpeed);
@@ -103,23 +136,51 @@ public class NinjaController : MonoBehaviour
         animator.SetBool("isDodging", false);
         transform.position = Vector2.MoveTowards(transform.position, positionTarget.transform.position, movementSpeed);
         isDodging = false;
+        StartCoroutine(DecreasePosture(1f));
 
         StartCoroutine(Delay(0.23f));
     }
 
-    void Block()
+    private void Block()
 	{
-		actionAvaliable = false;
-		isBlocking = true;
-		animator.SetBool("isBlocking", true);
+        if (rightBlock)
+		{
+            postureReduction = false;
+            actionAvaliable = false;
+            isBlocking = true;
+            animator.SetBool("isBlocking", true);
+        }
+        else if (leftBlock)
+		{
+            postureReduction = false;
+            sprite.flipX = true;
+            actionAvaliable = false;
+            isBlocking = true;
+            animator.SetBool("isBlocking", true);
+        }
     }
 
-    IEnumerator Delay(float time)
+    private IEnumerator Delay(float time)
     {
-        yield return new WaitForSeconds(time);
-        actionAvaliable = true;
-        isBlocking = false;
-        animator.SetBool("isBlocking", false);
+        if(leftBlock)
+		{
+            yield return new WaitForSeconds(time);
+            actionAvaliable = true;
+            isBlocking = false;
+            animator.SetBool("isBlocking", false);
+            sprite.flipX = false;
+            leftBlock = false;
+            StartCoroutine(DecreasePosture(2f));
+        }
+        else
+		{
+            yield return new WaitForSeconds(time);
+            actionAvaliable = true;
+            isBlocking = false;
+            animator.SetBool("isBlocking", false);
+            rightBlock = false;
+            StartCoroutine(DecreasePosture(2f));
+        }
     }
 
     public void TakeDamage(int damage)
@@ -140,10 +201,16 @@ public class NinjaController : MonoBehaviour
  //       postureBar.SetPosture(currentPosture);
  //   }
 
-    public void DecreasePosture(int value)
+    private IEnumerator DecreasePosture(float value)
 	{
-        currentPosture -= value;
-        postureBar.SetPosture(currentPosture);
+        yield return new WaitForSeconds(2f);
+        postureReduction = true;
+        while (postureReduction && currentPosture > 0f)
+		{
+            yield return new WaitForSeconds(0.9f);
+            currentPosture -= value;
+            postureBar.SetPosture(currentPosture);
+        }
     }
 
  //   IEnumerator DecreasePosture2(int value)

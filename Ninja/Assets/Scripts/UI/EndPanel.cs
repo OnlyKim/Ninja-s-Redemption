@@ -3,33 +3,27 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class LevelLoader : MonoBehaviour
+public class EndPanel : MonoBehaviour
 {
     [SerializeField] private Animator transitionAnimator;
     [SerializeField] private float transitionTime;
 
-    public void LoadNextLevel()
+    public void ReplayButton()
+    {
+        StartCoroutine(Transition(SceneManager.GetActiveScene().buildIndex));
+    }
+
+    public void MenuButton()
 	{
-        StartCoroutine(Transition(SceneManager.GetActiveScene().buildIndex + 1));
+        FindObjectOfType<LevelLoader>().LoadMenu();
 	}
 
-    public void LoadMenu()
-	{
-        Time.timeScale = 1f;
-        StartCoroutine(Transition(SceneManager.GetActiveScene().buildIndex - 1));
-    }
-
-    public void RestartFight()
-	{
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-    }
-
     private IEnumerator Transition(int levelIndex)
-	{
+    {
         transitionAnimator.SetTrigger("Start");
 
         yield return new WaitForSeconds(transitionTime);
 
         SceneManager.LoadScene(levelIndex);
-	}
+    }
 }

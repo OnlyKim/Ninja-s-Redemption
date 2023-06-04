@@ -22,7 +22,7 @@ public class GamerManager : MonoBehaviour
 	void Update()
     {
       
-
+        //Verifica se a vida do inimigo chegou a zero (jogador ganhou)
         if (FindObjectOfType<EnemyScript>().enemyCurrentHP <= 0)
         {
             stopGame = true;
@@ -31,6 +31,7 @@ public class GamerManager : MonoBehaviour
             victoryPanel.SetActive(true);
         }
 
+        //Verifica se a vida do jogador chegou a zero (jogador perdeu)
         if(FindFirstObjectByType<NinjaController>().currentHP <= 0)
 		{
             stopGame = true;
@@ -40,17 +41,12 @@ public class GamerManager : MonoBehaviour
         }
     }
 
-    public void Restart()
-    {
-        StartCoroutine(Delay());
-    }
-
     public void LoadMenu()
 	{
         FindObjectOfType<LevelLoader>().LoadMenu();
 	}
 
-    IEnumerator Delay()
+    private IEnumerator Delay()
     {
         yield return new WaitForSeconds(5f);
     }
