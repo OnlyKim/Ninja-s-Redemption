@@ -834,6 +834,7 @@ MonoBehaviour:
   animator: {fileID: 244814148}
   currentHP: 0
   currentPosture: 0
+  timer: 3
 --- !u!212 &244814145
 SpriteRenderer:
   m_ObjectHideFlags: 0

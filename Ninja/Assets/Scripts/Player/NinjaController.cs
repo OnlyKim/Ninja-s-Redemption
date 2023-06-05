@@ -28,7 +28,7 @@ public class NinjaController : MonoBehaviour
     public Animator animator;
 
     [HideInInspector] public int currentHP;
-    [HideInInspector] public float currentPosture;
+    [SerializeField] public float currentPosture;
 
     private bool actionAvaliable = true;
     private bool leftBlock = false;
@@ -36,7 +36,8 @@ public class NinjaController : MonoBehaviour
 
     private float coef;
     private bool postureReduction = false;
-    private bool postureLimit = true;
+    private bool postureLimit = false;
+    [SerializeField] private float timer;
 
     private void Start()
     {
@@ -53,7 +54,10 @@ public class NinjaController : MonoBehaviour
 
     private void Update()
     {
-        if(!gameManager.stopGame && !postureLimit)
+        if (currentPosture >= playerMaxPosture)
+            postureLimit = true;
+
+        if (!gameManager.stopGame && !postureLimit)
 		{
             //Punch
             if (Input.GetKeyDown(KeyCode.R) && actionAvaliable && !wasDamaged) //Soco
@@ -64,34 +68,62 @@ public class NinjaController : MonoBehaviour
                 StartCoroutine(Dodge());
 
             //Bloqueio direita
-            if (Input.GetKey(KeyCode.V) && !wasDamaged && !leftBlock) //Bloqueio
+            if (Input.GetKeyDown(KeyCode.V) && !wasDamaged && !leftBlock) //Bloqueio
             {
                 rightBlock = true;
-                Block();
-            }
-            else if (Input.GetKeyUp(KeyCode.V) && !leftBlock) //Delay do Bloqueio ****
-            {
-                StartCoroutine(Delay(0.15f));
+                StartCoroutine(Block());
             }
 
+            //else if (Input.GetKeyUp(KeyCode.V) && !leftBlock) //Delay do Bloqueio ****
+            //{
+            //    StartCoroutine(Delay(0.15f));
+            //}
+
             //Bloqueio esquerda
-            if (Input.GetKey(KeyCode.C) && !wasDamaged && !rightBlock) //Bloqueio
+            if (Input.GetKeyDown(KeyCode.C) && !wasDamaged && !rightBlock) //Bloqueio
             {
                 leftBlock = true;
-                Block();
+                StartCoroutine(Block());
             }
-            else if (Input.GetKeyUp(KeyCode.C) && !rightBlock) //Delay do Bloqueio ****
+
+            //else if (Input.GetKeyUp(KeyCode.C) && !rightBlock) //Delay do Bloqueio ****
+            //{
+            //    StartCoroutine(Delay(0.15f));
+            //}
+        }
+        if (postureReduction)
+        {
+
+            timer -= Time.deltaTime;
+
+            if (timer < 0)
             {
-                StartCoroutine(Delay(0.15f));
+                if(postureLimit)
+				{
+                    timer = 0;
+                    currentPosture -= 8f * Time.deltaTime;
+                    postureBar.SetPosture(currentPosture);
+
+                    if (currentPosture <= 78)
+                        postureLimit = false;
+                }
+                else
+				{
+                    timer = 0;
+                    currentPosture -= 5.5f * Time.deltaTime;
+                    postureBar.SetPosture(currentPosture);
+                }
+                
             }
         }
-        
     }
 
     private IEnumerator Punch()
     {
         actionAvaliable = false;
         isPunching = true;
+        postureReduction = false;
+        timer = 1.2f;
 
         yield return new WaitForSeconds(0.10f);
 
@@ -100,19 +132,18 @@ public class NinjaController : MonoBehaviour
 
         if (!enemy.isBlocking) //******PASSAR PARA O INIMIGO ******
         {
-            postureReduction = false;
             IncreasePosture(10);
             enemy.EnemyTakeDamage(10);
             enemy.animator.SetBool("wasDamaged", true);
             enemy.wasDamaged = true;
-            postureReduction = true;
             yield return new WaitForSeconds(0.4f);
-            StartCoroutine(DecreasePosture(4f));
+            postureReduction = true;
             enemy.animator.SetBool("wasDamaged", false);
             enemy.wasDamaged = false;
         }
 
         else if (enemy.isBlocking)
+            postureReduction = true;
             enemy.EnemyIncreasePosture(15);
 
         yield return new WaitForSeconds(0.05f);
@@ -126,61 +157,84 @@ public class NinjaController : MonoBehaviour
 
     private IEnumerator Dodge()
     {
-        IncreasePosture(2);
+        IncreasePosture(3);
         postureReduction = false;
+        timer = 1.2f;
+
         actionAvaliable = false;
         isDodging = true;
         transform.position = Vector2.MoveTowards(transform.position, dodgeTarget.transform.position, movementSpeed);
         animator.SetBool("isDodging", true);
         yield return new WaitForSeconds(0.25f);
+        postureReduction = true;
         animator.SetBool("isDodging", false);
         transform.position = Vector2.MoveTowards(transform.position, positionTarget.transform.position, movementSpeed);
         isDodging = false;
-        StartCoroutine(DecreasePosture(1f));
 
         StartCoroutine(Delay(0.23f));
     }
 
-    private void Block()
+    private IEnumerator Block()
 	{
+        IncreasePosture(6);
+        postureReduction = false;
+        timer = 1.2f;
+        
         if (rightBlock)
 		{
-            postureReduction = false;
             actionAvaliable = false;
             isBlocking = true;
             animator.SetBool("isBlocking", true);
+            yield return new WaitForSeconds(0.6f);
+            postureReduction = true;
+            actionAvaliable = true;
+            isBlocking = false;
+            animator.SetBool("isBlocking", false);
+            rightBlock = false;
+            StartCoroutine(Delay(0.23f));
+
         }
         else if (leftBlock)
 		{
-            postureReduction = false;
             sprite.flipX = true;
             actionAvaliable = false;
             isBlocking = true;
             animator.SetBool("isBlocking", true);
-        }
-    }
-
-    private IEnumerator Delay(float time)
-    {
-        if(leftBlock)
-		{
-            yield return new WaitForSeconds(time);
+            yield return new WaitForSeconds(0.6f);
+            postureReduction = true;
             actionAvaliable = true;
             isBlocking = false;
             animator.SetBool("isBlocking", false);
             sprite.flipX = false;
             leftBlock = false;
-            StartCoroutine(DecreasePosture(2f));
+            StartCoroutine(Delay(0.23f));
         }
-        else
-		{
-            yield return new WaitForSeconds(time);
-            actionAvaliable = true;
-            isBlocking = false;
-            animator.SetBool("isBlocking", false);
-            rightBlock = false;
-            StartCoroutine(DecreasePosture(2f));
-        }
+    }
+
+    private IEnumerator Delay(float time)
+    {
+        yield return new WaitForSeconds(time);
+        actionAvaliable = true;
+        //      if(leftBlock)
+        //{
+        //          yield return new WaitForSeconds(time);
+        //          actionAvaliable = true;
+        //          isBlocking = false;
+        //          animator.SetBool("isBlocking", false);
+        //          sprite.flipX = false;
+        //          leftBlock = false;
+        //          StartCoroutine(DecreasePosture(2f));
+        //      }
+        //      else
+        //{
+        //          yield return new WaitForSeconds(time);
+        //          actionAvaliable = true;
+        //          isBlocking = false;
+        //          animator.SetBool("isBlocking", false);
+        //          rightBlock = false;
+        //          StartCoroutine(DecreasePosture(2f));
+        //      }
+
     }
 
     public void TakeDamage(int damage)
@@ -193,36 +247,10 @@ public class NinjaController : MonoBehaviour
 	{
         currentPosture += value;
         postureBar.SetPosture(currentPosture);
-	}
 
- //   public void DecreasePosture(int value)
-	//{
- //       currentPosture -= value;
- //       postureBar.SetPosture(currentPosture);
- //   }
-
-    private IEnumerator DecreasePosture(float value)
-	{
-        yield return new WaitForSeconds(2f);
-        postureReduction = true;
-        while (postureReduction && currentPosture > 0f)
+        if(currentPosture == playerMaxPosture)
 		{
-            yield return new WaitForSeconds(0.9f);
-            currentPosture -= value;
-            postureBar.SetPosture(currentPosture);
-        }
-    }
-
- //   IEnumerator DecreasePosture2(int value)
-	//{
- //       yield return new WaitForSeconds(1.4f);
-
- //       currentPosture -= value;
- //       postureBar.SetPosture(currentPosture);
-
- //   }
-
-
-
-
+            postureLimit = true;
+		}
+	}
 }

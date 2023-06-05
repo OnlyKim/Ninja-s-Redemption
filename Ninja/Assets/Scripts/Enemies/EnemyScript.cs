@@ -74,7 +74,7 @@ public class EnemyScript : MonoBehaviour
 	private IEnumerator EnemyAttack()
 	{
 		attackWarning.SetActive(true);
-		yield return new WaitForSeconds(0.35f);
+		yield return new WaitForSeconds(0.47f);
 		isPunching = true;
 		animator.SetBool("isPunching", true);
 		if (!ninjaPlayer.isDodging && !ninjaPlayer.isBlocking && !wasDamaged && !gameManager.stopGame)
