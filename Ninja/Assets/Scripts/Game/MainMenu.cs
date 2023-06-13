@@ -5,6 +5,10 @@ using UnityEngine.SceneManagement;
 
 public class MainMenu : MonoBehaviour
 {
+	[SerializeField] GameObject mainPanel;
+	[SerializeField] GameObject optionsPanel;
+
+	//Menu principal
 	public void PlayGame()
 	{
 		//SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
