@@ -132,6 +132,7 @@ public class NinjaController : MonoBehaviour
                 StartCoroutine(Block());
             }
         }
+
         if (postureReduction)
         {
 
@@ -154,7 +155,6 @@ public class NinjaController : MonoBehaviour
                     currentPosture -= 5.5f * Time.deltaTime;
                     postureBar.SetPosture(currentPosture);
                 }
-                
             }
         }
     }
@@ -210,6 +210,7 @@ public class NinjaController : MonoBehaviour
         else if (leftPunch && enemy.isBlocking) //Se soco for esquerda enquanto o inimigo estiver bloqueando...
 		{
             postureReduction = true;
+<<<<<<< Updated upstream
             enemy.EnemyIncreasePosture(15);
             yield return new WaitForSeconds(0.05f);
             animator.SetBool("isPunching", false);
@@ -230,6 +231,10 @@ public class NinjaController : MonoBehaviour
         }
         StartCoroutine(Delay(0.23f));
     }
+=======
+        enemy.EnemyIncreasePosture(15);
+        IncreasePosture(5);
+>>>>>>> Stashed changes
 
     
     private IEnumerator PunchStrong() //Soco forte

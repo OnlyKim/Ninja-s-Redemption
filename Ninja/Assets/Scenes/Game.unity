@@ -2483,6 +2483,7 @@ MonoBehaviour:
   defenseProbability: 5
   enemyHealthBar: {fileID: 754018346}
   enemyPostureBar: {fileID: 792281923}
+  timer: 0
   enemyHP: 200
   enemyMaxPosture: 100
   punchDamage: 5

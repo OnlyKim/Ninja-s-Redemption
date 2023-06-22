@@ -18,9 +18,12 @@ public class EnemyScript : MonoBehaviour
 
 	private int rand;
 	private float actionPeriod;
+	[SerializeField] private float timer;
 	private bool attack = false;
 	private bool defense = false;
 	private bool enemyActionAvaliable;
+	private bool enemyPostureReduction = false;
+	private bool enemyPostureLimit = false;
 
 	private NinjaController ninjaPlayer;
 	private GamerManager gameManager;
@@ -34,7 +37,7 @@ public class EnemyScript : MonoBehaviour
 	public Animator animator;
 
 	[HideInInspector] public int enemyCurrentHP;
-	[HideInInspector] public int enemyCurrentPosture;
+	[SerializeField] public float enemyCurrentPosture;
 
 	private IEnumerator Start()
 	{
@@ -52,45 +55,82 @@ public class EnemyScript : MonoBehaviour
 			attack = false;
 			actionPeriod = Random.Range(minActionPeriod, maxActionPeriod);
 
-			if (!attack && ninjaPlayer.isPunching && !gameManager.stopGame && enemyActionAvaliable)
+			if(!gameManager.stopGame)
 			{
-				defense = true;
-				enemyActionAvaliable = false;
-				StartCoroutine(EnemyBlock());
+				if (!attack && ninjaPlayer.isPunching && enemyActionAvaliable)
+				{
+					defense = true;
+					enemyActionAvaliable = false;
+					StartCoroutine(EnemyBlock());
+				}
+
+				yield return new WaitForSeconds(actionPeriod);
+
+				if (defense == false && Random.Range(0, 100) > attackProbability && enemyActionAvaliable)
+				{
+					attack = true;
+					enemyActionAvaliable = false;
+					StartCoroutine(EnemyAttack());
+				}
 			}
 
-			yield return new WaitForSeconds(actionPeriod);
-
-			if (defense == false && Random.Range(0, 100) > attackProbability && !gameManager.stopGame && enemyActionAvaliable)
+			if (enemyPostureReduction)
 			{
-				attack = true;
-				enemyActionAvaliable = false;
-				StartCoroutine(EnemyAttack());
+				timer -= Time.deltaTime;
+
+				if (timer < 0)
+				{
+					if (enemyPostureLimit)
+					{
+						timer = 0;
+						enemyCurrentPosture -= 8f * Time.deltaTime;
+						enemyPostureBar.SetPosture(enemyCurrentPosture);
+
+						if (enemyCurrentPosture <= 78)
+							enemyPostureLimit = false;
+					}
+					else
+					{
+						timer = 0;
+						enemyCurrentPosture -= 5.5f * Time.deltaTime;
+						enemyPostureBar.SetPosture(enemyCurrentPosture);
+					}
+				}
 			}
 		}
 	}
 
-	//Ataque do inimigo
-	private IEnumerator EnemyAttack()
+	private IEnumerator EnemyAttack() //Inimigo Golpe Fraco
 	{
 		attackWarning.SetActive(true);
 		yield return new WaitForSeconds(0.47f);
+		enemyPostureReduction = false;
+		timer = 1.3f;
 		isPunching = true;
 		animator.SetBool("isPunching", true);
 		if (!ninjaPlayer.isDodging && !ninjaPlayer.isBlocking && !wasDamaged && !gameManager.stopGame)
 		{
+			enemyPostureReduction = false;
 			ninjaPlayer.TakeDamage(10);
 			ninjaPlayer.animator.SetBool("wasDamaged", true);
 			ninjaPlayer.wasDamaged = true;
-			DecreasePosture(4);
+			EnemyIncreasePosture(10);
 			yield return new WaitForSeconds(0.4f);
 			ninjaPlayer.animator.SetBool("wasDamaged", false);
 			ninjaPlayer.wasDamaged = false;
 		}
-		else if(ninjaPlayer.isBlocking)
-			ninjaPlayer.IncreasePosture(5);
-
-
+		else if (ninjaPlayer.isBlocking)
+		{
+			ninjaPlayer.IncreasePosture(6);
+			enemyPostureReduction = true;
+		}
+			
+		else if (ninjaPlayer.isDodging)
+		{
+			EnemyIncreasePosture(10);
+			enemyPostureReduction = true;
+		}
+			
 		yield return new WaitForSeconds(0.25f);
 		isPunching = false;
 		attack = false;
@@ -99,19 +139,23 @@ public class EnemyScript : MonoBehaviour
 		attackWarning.SetActive(false);
 	}
 
-	//Bloqueio
-	private IEnumerator EnemyBlock()
+	private IEnumerator EnemyBlock() //Inimigo Bloqueio
 	{
+		EnemyIncreasePosture(6);
+		enemyPostureReduction = false;
+		timer = 1.3f;
+
 		isBlocking = true;
 		animator.SetBool("isBlocking", true);
 		yield return new WaitForSeconds(0.21f);
+		enemyPostureReduction = true;
 		isBlocking = false;
 		animator.SetBool("isBlocking", false);
 		defense = false;
 		enemyActionAvaliable = true;
 	}
 
-	//Soco do inimigo
+	//Soco toma dano
 	public void EnemyTakeDamage(int damage)
 	{
 		enemyActionAvaliable = false;
