@@ -39,12 +39,12 @@ public class NinjaController : MonoBehaviour
 
     private bool actionAvaliable = true;
 
-    private bool leftBlock = false;
-    private bool rightBlock = false;
+    public bool leftBlock = false;
+    public bool rightBlock = false;
     private bool leftPunch = false;
     private bool rightPunch = false;
-    private bool leftDodge = false;
-    private bool rightDodge = false;
+    public bool leftDodge = false;
+    public bool rightDodge = false;
     private bool leftSPunch = false;
     private bool rightSPunch = false;
 
@@ -82,11 +82,13 @@ public class NinjaController : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.E) && actionAvaliable && !wasDamaged) //Soco esquerda
 			{
                 leftPunch = true;
+                isPunching = true;
                 StartCoroutine(Punch());
             }
             if (Input.GetKeyDown(KeyCode.R) && actionAvaliable && !wasDamaged) //Soco direita
 			{
                 rightPunch = true;
+                isPunching = true;
                 StartCoroutine(Punch());
             }
 
@@ -118,7 +120,7 @@ public class NinjaController : MonoBehaviour
 
 
             //Bloqueio
-            if (Input.GetKeyDown(KeyCode.C) && !wasDamaged && !leftBlock) //Bloqueio
+            if (Input.GetKeyDown(KeyCode.V) && !wasDamaged && !leftBlock) //Bloqueio esquerda
             {
                 rightBlock = true;
                 StartCoroutine(Block());
@@ -126,13 +128,12 @@ public class NinjaController : MonoBehaviour
 
 
             //Bloqueio esquerda
-            if (Input.GetKeyDown(KeyCode.V) && !wasDamaged && !rightBlock) //Bloqueio
+            if (Input.GetKeyDown(KeyCode.C) && !wasDamaged && !rightBlock) //Bloqueio direita
             {
                 leftBlock = true;
                 StartCoroutine(Block());
             }
         }
-
         if (postureReduction)
         {
 
@@ -167,8 +168,10 @@ public class NinjaController : MonoBehaviour
         postureReduction = false;
         timer = 1.2f;
 
-        yield return new WaitForSeconds(0.10f);
+        yield return new WaitForSeconds(0.12f);
+        AudioManager.instance.PlaySFX("Damage");
         animator.SetBool("isPunching", true);
+        
 
         if(leftPunch && !enemy.isBlocking) //Se o soco for para a esquerda...
 		{
@@ -176,6 +179,7 @@ public class NinjaController : MonoBehaviour
             IncreasePosture(10);
             enemy.EnemyTakeDamage(10);
             enemy.animator.SetBool("wasDamaged", true);
+            AudioManager.instance.PlaySFX("TakingDamage");
             enemy.wasDamaged = true;
             yield return new WaitForSeconds(0.4f);
             postureReduction = true;
@@ -194,6 +198,7 @@ public class NinjaController : MonoBehaviour
             IncreasePosture(10);
             enemy.EnemyTakeDamage(10);
             enemy.animator.SetBool("wasDamaged", true);
+            AudioManager.instance.PlaySFX("TakingDamage");
             enemy.wasDamaged = true;
             yield return new WaitForSeconds(0.4f);
             postureReduction = true;
@@ -210,8 +215,8 @@ public class NinjaController : MonoBehaviour
         else if (leftPunch && enemy.isBlocking) //Se soco for esquerda enquanto o inimigo estiver bloqueando...
 		{
             postureReduction = true;
-<<<<<<< Updated upstream
             enemy.EnemyIncreasePosture(15);
+            AudioManager.instance.PlaySFX("Block");
             yield return new WaitForSeconds(0.05f);
             animator.SetBool("isPunching", false);
             transform.position = Vector2.MoveTowards(transform.position, positionTarget.transform.position, movementSpeed);
@@ -222,6 +227,7 @@ public class NinjaController : MonoBehaviour
         {
             postureReduction = true;
             enemy.EnemyIncreasePosture(15);
+            AudioManager.instance.PlaySFX("Block");
             yield return new WaitForSeconds(0.05f);
             animator.SetBool("isPunching", false);
             transform.position = Vector2.MoveTowards(transform.position, positionTarget.transform.position, movementSpeed);
@@ -231,16 +237,11 @@ public class NinjaController : MonoBehaviour
         }
         StartCoroutine(Delay(0.23f));
     }
-=======
-        enemy.EnemyIncreasePosture(15);
-        IncreasePosture(5);
->>>>>>> Stashed changes
 
     
     private IEnumerator PunchStrong() //Soco forte
     {
         actionAvaliable = false;
-        isPunching = true;
         postureReduction = false;
         timer = 1.2f;
         playerSPunchIndicator.SetActive(true);
@@ -287,8 +288,11 @@ public class NinjaController : MonoBehaviour
             playerSPunchIndicator.SetActive(false);
         }
 
+
+
         else if (leftSPunch && enemy.isBlocking) //Se soco for esquerda enquanto o inimigo estiver bloqueando...
         {
+            AudioManager.instance.PlaySFX("Block");
             postureReduction = true;
             enemy.EnemyIncreasePosture(15);
             yield return new WaitForSeconds(0.05f);
@@ -300,6 +304,7 @@ public class NinjaController : MonoBehaviour
         }
         else if (rightSPunch && enemy.isBlocking) //Se soco for direita enquanto o inimigo estiver bloqueando
         {
+            AudioManager.instance.PlaySFX("Block");
             postureReduction = true;
             enemy.EnemyIncreasePosture(15);
             yield return new WaitForSeconds(0.05f);
@@ -310,7 +315,6 @@ public class NinjaController : MonoBehaviour
             rightSPunch = false;
             playerSPunchIndicator.SetActive(false);
         }
-
         StartCoroutine(Delay(0.23f));
     }
 
@@ -326,10 +330,10 @@ public class NinjaController : MonoBehaviour
             isDodging = true;
             transform.position = Vector2.MoveTowards(transform.position, dodgeRightTarget.transform.position, movementSpeed);
             sprite.flipX = true;
-            animator.SetBool("isDodging", true);
+            //animator.SetBool("isDodging", true);
             yield return new WaitForSeconds(0.25f);
             postureReduction = true;
-            animator.SetBool("isDodging", false);
+            //animator.SetBool("isDodging", false);
             transform.position = Vector2.MoveTowards(transform.position, positionTarget.transform.position, movementSpeed);
             sprite.flipX = false;
             isDodging = false;
@@ -342,10 +346,10 @@ public class NinjaController : MonoBehaviour
             actionAvaliable = false;
             isDodging = true;
             transform.position = Vector2.MoveTowards(transform.position, dodgeLeftTarget.transform.position, movementSpeed);
-            animator.SetBool("isDodging", true);
+            //animator.SetBool("isDodging", true);
             yield return new WaitForSeconds(0.25f);
             postureReduction = true;
-            animator.SetBool("isDodging", false);
+            //animator.SetBool("isDodging", false);
             transform.position = Vector2.MoveTowards(transform.position, positionTarget.transform.position, movementSpeed);
             isDodging = false;
             leftDodge = false;
@@ -362,30 +366,29 @@ public class NinjaController : MonoBehaviour
         
         if (leftBlock) //Bloquear para a esquerda
 		{
-            actionAvaliable = false;
-            isBlocking = true;
-            animator.SetBool("isBlocking", true);
-            yield return new WaitForSeconds(0.6f);
-            postureReduction = true;
-            actionAvaliable = true;
-            isBlocking = false;
-            animator.SetBool("isBlocking", false);
-            leftBlock = false;
-            StartCoroutine(Delay(0.23f));
-
-        }
-        else if (rightBlock) //Bloquear para a direita
-		{
             sprite.flipX = true;
             actionAvaliable = false;
             isBlocking = true;
             animator.SetBool("isBlocking", true);
-            yield return new WaitForSeconds(0.6f);
+            yield return new WaitForSeconds(0.8f);
             postureReduction = true;
             actionAvaliable = true;
             isBlocking = false;
             animator.SetBool("isBlocking", false);
             sprite.flipX = false;
+            leftBlock = false;
+            StartCoroutine(Delay(0.23f));
+        }
+        else if (rightBlock) //Bloquear para a direita
+		{
+            actionAvaliable = false;
+            isBlocking = true;
+            animator.SetBool("isBlocking", true);
+            yield return new WaitForSeconds(0.8f);
+            postureReduction = true;
+            actionAvaliable = true;
+            isBlocking = false;
+            animator.SetBool("isBlocking", false);
             rightBlock = false;
             StartCoroutine(Delay(0.23f));
         }

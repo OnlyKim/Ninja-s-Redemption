@@ -17,13 +17,9 @@ public class PostureBar : MonoBehaviour
 
 	public Slider postureSlider;
 
-	[HideInInspector] public float currentTime;
+	//[HideInInspector] public float currentTime;
 
-	//private void Start()
-	//{
-	//	currentTime = startTime;
-	//}
-
+	
 	public void SetMinPosture(int posture)
 	{
 		postureSlider.minValue = posture;
@@ -34,26 +30,26 @@ public class PostureBar : MonoBehaviour
 		postureSlider.value = newPosture;
 	}
 
-	void PostureTimer()
-	{
-		currentTime = startTime; 
-		currentTime -= timeDecreaseAmount * Time.deltaTime;
+	//void PostureTimer()
+	//{
+	//	currentTime = startTime; 
+	//	currentTime -= timeDecreaseAmount * Time.deltaTime;
 
-		//if(currentTime <= 0)
-		//{
-		//	do
-		//	{
-		//		if (isPlayer && !isEnemy)
-		//		{
-		//			yield return new WaitForSeconds(1f);
-		//		}
+	//	//if(currentTime <= 0)
+	//	//{
+	//	//	do
+	//	//	{
+	//	//		if (isPlayer && !isEnemy)
+	//	//		{
+	//	//			yield return new WaitForSeconds(1f);
+	//	//		}
 					
-		//		else if (isEnemy && !isPlayer)
-		//		{
-		//			yield return new WaitForSeconds(1f);
-		//		}
-		//	} while (FindAnyObjectByType<NinjaController>().isPunching == true);
-		//}
-	}
+	//	//		else if (isEnemy && !isPlayer)
+	//	//		{
+	//	//			yield return new WaitForSeconds(1f);
+	//	//		}
+	//	//	} while (FindAnyObjectByType<NinjaController>().isPunching == true);
+	//	//}
+	//}
 
 }

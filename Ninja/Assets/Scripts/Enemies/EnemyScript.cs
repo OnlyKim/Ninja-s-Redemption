@@ -4,7 +4,9 @@ using UnityEngine;
 
 public class EnemyScript : MonoBehaviour
 {
-	[SerializeField] private GameObject attackWarning;
+	//[SerializeField] private GameObject attackWarning;
+	[SerializeField] private GameObject rightAttackWarning;
+	[SerializeField] private GameObject leftAttackWarning;
 	[SerializeField] private GameObject enemyPositionTarget;
     [SerializeField] private GameObject enemyPunchTarget;
     [SerializeField] private GameObject enemyDodgeTarget;
@@ -18,15 +20,21 @@ public class EnemyScript : MonoBehaviour
 
 	private int rand;
 	private float actionPeriod;
-	[SerializeField] private float timer;
 	private bool attack = false;
 	private bool defense = false;
 	private bool enemyActionAvaliable;
+	private bool rightPrevious = false;
+	private bool postureLimit = false;
 	private bool enemyPostureReduction = false;
-	private bool enemyPostureLimit = false;
+	private float timer;
+
+	private int punchSideDecision;
+	private int rightPunchSideDecision = 50;
+	//private int leftPunchSideDecision = 100;
 
 	private NinjaController ninjaPlayer;
 	private GamerManager gameManager;
+	private SpriteRenderer enemySprite;
 
 	public int enemyHP;
 	public int enemyMaxPosture;
@@ -34,30 +42,41 @@ public class EnemyScript : MonoBehaviour
     public bool isPunching = false;
     public bool isBlocking = false;
 	public bool wasDamaged = false;
+	public bool isCharging = false;
+
+	public bool rightPunch = false;
+	public bool leftPunch = false;
+
 	public Animator animator;
 
 	[HideInInspector] public int enemyCurrentHP;
-	[SerializeField] public float enemyCurrentPosture;
+	[HideInInspector] public float enemyCurrentPosture;
 
 	private IEnumerator Start()
 	{
+		enemySprite = GetComponent<SpriteRenderer>();
 		ninjaPlayer = FindAnyObjectByType<NinjaController>();
 		gameManager = FindAnyObjectByType<GamerManager>();
 		enemyCurrentHP = enemyHP;
 		enemyActionAvaliable = true;
 		enemyCurrentPosture = 0;
 
-		attackWarning.SetActive(false);
-		if (enemyCurrentHP <= 0) //Inicia a animação do inimigo derrubado caso a vida dele chegue a 0
-			animator.SetBool("isDown", true);
+		rightAttackWarning.SetActive(false);
+		leftAttackWarning.SetActive(false);
+		//if (enemyCurrentHP <= 0) //Inicia a animação do inimigo derrubado caso a vida dele chegue a 0
+		//	animator.SetBool("isDown", true);
 		while (true)
 		{
-			attack = false;
-			actionPeriod = Random.Range(minActionPeriod, maxActionPeriod);
+			if (enemyCurrentPosture >= enemyMaxPosture)
+				postureLimit = true;
 
-			if(!gameManager.stopGame)
+			if (!gameManager.stopGame && !postureLimit)
 			{
-				if (!attack && ninjaPlayer.isPunching && enemyActionAvaliable)
+
+				attack = false;
+				actionPeriod = Random.Range(minActionPeriod, maxActionPeriod);
+
+				if (!attack && ninjaPlayer.isPunching && !gameManager.stopGame && enemyActionAvaliable)
 				{
 					defense = true;
 					enemyActionAvaliable = false;
@@ -66,28 +85,27 @@ public class EnemyScript : MonoBehaviour
 
 				yield return new WaitForSeconds(actionPeriod);
 
-				if (defense == false && Random.Range(0, 100) > attackProbability && enemyActionAvaliable)
+				if (defense == false && Random.Range(0, 100) > attackProbability && !gameManager.stopGame && enemyActionAvaliable)
 				{
 					attack = true;
 					enemyActionAvaliable = false;
 					StartCoroutine(EnemyAttack());
 				}
 			}
-
 			if (enemyPostureReduction)
 			{
 				timer -= Time.deltaTime;
 
 				if (timer < 0)
 				{
-					if (enemyPostureLimit)
+					if (postureLimit)
 					{
 						timer = 0;
 						enemyCurrentPosture -= 8f * Time.deltaTime;
 						enemyPostureBar.SetPosture(enemyCurrentPosture);
 
 						if (enemyCurrentPosture <= 78)
-							enemyPostureLimit = false;
+							postureLimit = false;
 					}
 					else
 					{
@@ -98,53 +116,171 @@ public class EnemyScript : MonoBehaviour
 				}
 			}
 		}
+		
 	}
 
-	private IEnumerator EnemyAttack() //Inimigo Golpe Fraco
+	//Ataque do inimigo
+	private IEnumerator EnemyAttack()
 	{
-		attackWarning.SetActive(true);
-		yield return new WaitForSeconds(0.47f);
+		punchSideDecision = Random.Range(0, 100);
 		enemyPostureReduction = false;
-		timer = 1.3f;
-		isPunching = true;
-		animator.SetBool("isPunching", true);
-		if (!ninjaPlayer.isDodging && !ninjaPlayer.isBlocking && !wasDamaged && !gameManager.stopGame)
+		timer = 1.2f;
+
+		if (punchSideDecision <= rightPunchSideDecision) //Ataque direita
 		{
-			enemyPostureReduction = false;
-			ninjaPlayer.TakeDamage(10);
-			ninjaPlayer.animator.SetBool("wasDamaged", true);
-			ninjaPlayer.wasDamaged = true;
-			EnemyIncreasePosture(10);
-			yield return new WaitForSeconds(0.4f);
-			ninjaPlayer.animator.SetBool("wasDamaged", false);
-			ninjaPlayer.wasDamaged = false;
+			rightPunchSideDecision -= 5;
+			isCharging = true;
+			rightAttackWarning.SetActive(true);
+			yield return new WaitForSeconds(0.48f);
+			isCharging = false;
+			rightAttackWarning.SetActive(false);
+			isPunching = true;
+			animator.SetBool("isPunching", true);
+
+			if (!ninjaPlayer.isDodging && !ninjaPlayer.isBlocking && !ninjaPlayer.rightBlock && !wasDamaged && !gameManager.stopGame)
+			{
+				rightPunch = true;
+				EnemyIncreasePosture(10);
+				enemySprite.flipX = true;
+				ninjaPlayer.TakeDamage(10);
+				ninjaPlayer.animator.SetBool("wasDamaged", true);
+				ninjaPlayer.wasDamaged = true;
+				DecreasePosture(4);
+
+				yield return new WaitForSeconds(0.32f);
+
+				ninjaPlayer.animator.SetBool("wasDamaged", false);
+				ninjaPlayer.wasDamaged = false;
+
+				yield return new WaitForSeconds(0.25f);
+
+				enemyPostureReduction = true;
+				enemySprite.flipX = false;
+				isPunching = false;
+				rightPunch = false;
+				enemyActionAvaliable = true;
+				animator.SetBool("isPunching", false);
+				attack = false;
+			}
+			else if (ninjaPlayer.isBlocking && ninjaPlayer.rightBlock)
+			{
+				rightPunch = true;
+				EnemyIncreasePosture(10);
+				enemySprite.flipX = true;
+				ninjaPlayer.IncreasePosture(5);
+				AudioManager.instance.PlaySFX("Block");
+
+				yield return new WaitForSeconds(0.25f);
+
+				enemyPostureReduction = true;
+				enemySprite.flipX = false;
+				isPunching = false;
+				rightPunch = false;
+				enemyActionAvaliable = true;
+				animator.SetBool("isPunching", false);
+				attack = false;
+			}
+			else if (ninjaPlayer.isBlocking && ninjaPlayer.leftBlock)
+			{
+				rightPunch = true;
+				EnemyIncreasePosture(10);
+				enemySprite.flipX = true;
+				ninjaPlayer.TakeDamage(10);
+				AudioManager.instance.PlaySFX("TakingDamage");
+				ninjaPlayer.animator.SetBool("isBlocking", false);
+				ninjaPlayer.animator.SetBool("wasDamaged", true);
+
+				yield return new WaitForSeconds(0.25f);
+
+				enemyPostureReduction = true;
+				ninjaPlayer.animator.SetBool("wasDamaged", false);
+				enemySprite.flipX = false;
+				isPunching = false;
+				rightPunch = false;
+				enemyActionAvaliable = true;
+				animator.SetBool("isPunching", false);
+				attack = false;
+			}
 		}
-		else if (ninjaPlayer.isBlocking)
+
+
+		else if(punchSideDecision > rightPunchSideDecision) //Ataque esquerda
 		{
-			ninjaPlayer.IncreasePosture(6);
-			enemyPostureReduction = true;
+			rightPunchSideDecision += 5;
+			isCharging = true;
+			leftAttackWarning.SetActive(true);
+			yield return new WaitForSeconds(0.48f);
+			isCharging = false;
+			leftAttackWarning.SetActive(false);
+			isPunching = true;
+			animator.SetBool("isPunching", true);
+
+			if (!ninjaPlayer.isDodging && !ninjaPlayer.isBlocking && !ninjaPlayer.leftBlock && !wasDamaged && !gameManager.stopGame)
+			{
+				leftPunch = true;
+				EnemyIncreasePosture(10);
+				ninjaPlayer.TakeDamage(10);
+				ninjaPlayer.animator.SetBool("wasDamaged", true);
+				ninjaPlayer.wasDamaged = true;
+				DecreasePosture(4);
+
+				yield return new WaitForSeconds(0.35f);
+
+				ninjaPlayer.animator.SetBool("wasDamaged", false);
+				ninjaPlayer.wasDamaged = false;
+
+				yield return new WaitForSeconds(0.25f);
+
+				enemyPostureReduction = true;
+				isPunching = false;
+				leftPunch = false;
+				enemyActionAvaliable = true;
+				animator.SetBool("isPunching", false);
+				attack = false;
+			}
+			else if (ninjaPlayer.isBlocking && ninjaPlayer.leftBlock)
+			{
+				leftPunch = true;
+				EnemyIncreasePosture(10);
+				ninjaPlayer.IncreasePosture(5);
+				AudioManager.instance.PlaySFX("Block");
+
+				yield return new WaitForSeconds(0.5f);
+
+				enemyPostureReduction = true;
+				isPunching = false;
+				leftPunch = false;
+				enemyActionAvaliable = true;
+				animator.SetBool("isPunching", false);
+				attack = false;
+			}
+			else if (ninjaPlayer.isBlocking && ninjaPlayer.rightBlock)
+			{
+				leftPunch = true;
+				EnemyIncreasePosture(10);
+				ninjaPlayer.TakeDamage(10);
+				AudioManager.instance.PlaySFX("TakingDamage");
+				ninjaPlayer.animator.SetBool("isBlocking", false);
+				ninjaPlayer.animator.SetBool("wasDamaged", true);
+
+				yield return new WaitForSeconds(0.25f);
+
+				enemyPostureReduction = true;
+				ninjaPlayer.animator.SetBool("wasDamaged", false);
+				isPunching = false;
+				leftPunch = false;
+				enemyActionAvaliable = true;
+				animator.SetBool("isPunching", false);
+				attack = false;
+			}
 		}
-			
-		else if (ninjaPlayer.isDodging)
-		{
-			EnemyIncreasePosture(10);
-			enemyPostureReduction = true;
-		}
-			
-		yield return new WaitForSeconds(0.25f);
-		isPunching = false;
-		attack = false;
-		enemyActionAvaliable = true;
-		animator.SetBool("isPunching", false);
-		attackWarning.SetActive(false);
 	}
 
-	private IEnumerator EnemyBlock() //Inimigo Bloqueio
+	//Bloqueio
+	private IEnumerator EnemyBlock()
 	{
-		EnemyIncreasePosture(6);
 		enemyPostureReduction = false;
-		timer = 1.3f;
-
+		timer = 1.2f;
 		isBlocking = true;
 		animator.SetBool("isBlocking", true);
 		yield return new WaitForSeconds(0.21f);
@@ -155,13 +291,13 @@ public class EnemyScript : MonoBehaviour
 		enemyActionAvaliable = true;
 	}
 
-	//Soco toma dano
+	//Soco do inimigo
 	public void EnemyTakeDamage(int damage)
 	{
 		enemyActionAvaliable = false;
 		enemyCurrentHP -= damage;
 		enemyHealthBar.SetHealth(enemyCurrentHP);
-		StartCoroutine(EnemyDamageDelay(0.8f));
+		StartCoroutine(EnemyDamageDelay(1.2f));
 	}
 
 	//Aumento de postura do inimigo
@@ -169,6 +305,11 @@ public class EnemyScript : MonoBehaviour
 	{
 		enemyCurrentPosture += value;
 		enemyPostureBar.SetPosture(enemyCurrentPosture);
+
+		if (enemyCurrentPosture == enemyMaxPosture)
+		{
+			postureLimit = true;
+		}
 	}
 
 	//Diminuição da postura

@@ -10,32 +10,37 @@ public class GamerManager : MonoBehaviour
     [SerializeField] GameObject victoryPanel;
     [SerializeField] GameObject defeatPanel;
 
+    private EnemyScript enemy;
+    private NinjaController ninja;
+    private bool victory = false;
+
     [HideInInspector] public bool stopGame = false;
 
 	private void Start()
 	{
-        victoryPanel.SetActive(false);
-        defeatPanel.SetActive(false);
+        enemy = FindAnyObjectByType<EnemyScript>();
+        ninja = FindObjectOfType<NinjaController>();
+        //victoryPanel.SetActive(false);
+        //defeatPanel.SetActive(false);
     }
 
 	// Update is called once per frame
 	void Update()
     {
-      
         //Verifica se a vida do inimigo chegou a zero (jogador ganhou)
-        if (FindObjectOfType<EnemyScript>().enemyCurrentHP <= 0)
+        if (enemy.enemyCurrentHP == 0)
         {
             stopGame = true;
-            FindObjectOfType<EnemyScript>().animator.SetBool("isDown", true);
+            enemy.animator.SetBool("isDown", true);
             StartCoroutine(Delay());
             victoryPanel.SetActive(true);
         }
 
         //Verifica se a vida do jogador chegou a zero (jogador perdeu)
-        if(FindFirstObjectByType<NinjaController>().currentHP <= 0)
+        if(ninja.currentHP == 0)
 		{
             stopGame = true;
-            FindObjectOfType<NinjaController>().animator.SetBool("isDown", true);
+            ninja.animator.SetBool("isDown", true);
             StartCoroutine(Delay());
             defeatPanel.SetActive(true);
         }
@@ -48,6 +53,11 @@ public class GamerManager : MonoBehaviour
 
     private IEnumerator Delay()
     {
-        yield return new WaitForSeconds(5f);
+        yield return new WaitForSeconds(2f);
+
+        //if (victory)
+        //    victoryPanel.SetActive(true);
+        //else
+        //    defeatPanel.SetActive(true);
     }
 }
