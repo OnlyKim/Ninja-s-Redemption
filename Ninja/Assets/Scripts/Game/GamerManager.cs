@@ -28,21 +28,19 @@ public class GamerManager : MonoBehaviour
 	void Update()
     {
         //Verifica se a vida do inimigo chegou a zero (jogador ganhou)
-        if (enemy.enemyCurrentHP == 0)
+        if (enemy.enemyCurrentHP <= 0)
         {
             stopGame = true;
             enemy.animator.SetBool("isDown", true);
-            StartCoroutine(Delay());
-            victoryPanel.SetActive(true);
+            StartCoroutine(Delay(victoryPanel));
         }
 
         //Verifica se a vida do jogador chegou a zero (jogador perdeu)
-        if(ninja.currentHP == 0)
+        else if(ninja.currentHP <= 0)
 		{
             stopGame = true;
             ninja.animator.SetBool("isDown", true);
-            StartCoroutine(Delay());
-            defeatPanel.SetActive(true);
+            StartCoroutine(Delay(defeatPanel));
         }
     }
 
@@ -51,13 +49,10 @@ public class GamerManager : MonoBehaviour
         FindObjectOfType<LevelLoader>().LoadMenu();
 	}
 
-    private IEnumerator Delay()
+    private IEnumerator Delay(GameObject panel)
     {
         yield return new WaitForSeconds(2f);
+        panel.SetActive(true);
 
-        //if (victory)
-        //    victoryPanel.SetActive(true);
-        //else
-        //    defeatPanel.SetActive(true);
     }
 }

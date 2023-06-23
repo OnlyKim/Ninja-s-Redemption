@@ -7,6 +7,7 @@ public class LevelLoader : MonoBehaviour
 {
     [SerializeField] private Animator transitionAnimator;
     [SerializeField] private float transitionTime;
+    private const int menuIndex = 0;
 
     public void LoadNextLevel()
 	{
@@ -16,7 +17,7 @@ public class LevelLoader : MonoBehaviour
     public void LoadMenu()
 	{
         Time.timeScale = 1f;
-        StartCoroutine(Transition(SceneManager.GetActiveScene().buildIndex - 1));
+        StartCoroutine(Transition(menuIndex));
     }
 
     public void RestartFight()

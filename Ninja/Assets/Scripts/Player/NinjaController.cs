@@ -85,7 +85,7 @@ public class NinjaController : MonoBehaviour
                 isPunching = true;
                 StartCoroutine(Punch());
             }
-            if (Input.GetKeyDown(KeyCode.R) && actionAvaliable && !wasDamaged) //Soco direita
+            else if (Input.GetKeyDown(KeyCode.R) && actionAvaliable && !wasDamaged) //Soco direita
 			{
                 rightPunch = true;
                 isPunching = true;
@@ -94,12 +94,12 @@ public class NinjaController : MonoBehaviour
 
 
             //Soco Forte
-            if (Input.GetKeyDown(KeyCode.S) && actionAvaliable && !wasDamaged) //SocoF esquerda
+            else if (Input.GetKeyDown(KeyCode.S) && actionAvaliable && !wasDamaged) //SocoF esquerda
             {
                 leftSPunch = true;
                 StartCoroutine(PunchStrong());
             }
-            if (Input.GetKeyDown(KeyCode.G) && actionAvaliable && !wasDamaged) //SocoF direita
+            else if (Input.GetKeyDown(KeyCode.G) && actionAvaliable && !wasDamaged) //SocoF direita
             {
                 rightSPunch = true;
                 StartCoroutine(PunchStrong());
@@ -107,12 +107,12 @@ public class NinjaController : MonoBehaviour
 
 
             //Esquiva
-            if (Input.GetKeyDown(KeyCode.F) && actionAvaliable && !wasDamaged) //Esquiva direita
+            else if (Input.GetKeyDown(KeyCode.F) && actionAvaliable && !wasDamaged) //Esquiva direita
 			{
                 rightDodge = true;
                 StartCoroutine(Dodge());
             }
-            if (Input.GetKeyDown(KeyCode.D) && actionAvaliable && !wasDamaged) //Esquiva esquerda
+            else if (Input.GetKeyDown(KeyCode.D) && actionAvaliable && !wasDamaged) //Esquiva esquerda
             {
                 leftDodge = true;
                 StartCoroutine(Dodge());
@@ -120,7 +120,7 @@ public class NinjaController : MonoBehaviour
 
 
             //Bloqueio
-            if (Input.GetKeyDown(KeyCode.V) && !wasDamaged && !leftBlock) //Bloqueio esquerda
+            else if (Input.GetKeyDown(KeyCode.V) && !wasDamaged && !leftBlock) //Bloqueio esquerda
             {
                 rightBlock = true;
                 StartCoroutine(Block());
@@ -128,7 +128,7 @@ public class NinjaController : MonoBehaviour
 
 
             //Bloqueio esquerda
-            if (Input.GetKeyDown(KeyCode.C) && !wasDamaged && !rightBlock) //Bloqueio direita
+            else if (Input.GetKeyDown(KeyCode.C) && !wasDamaged && !rightBlock) //Bloqueio direita
             {
                 leftBlock = true;
                 StartCoroutine(Block());

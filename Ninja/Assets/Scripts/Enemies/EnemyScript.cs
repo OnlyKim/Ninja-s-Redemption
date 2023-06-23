@@ -52,7 +52,7 @@ public class EnemyScript : MonoBehaviour
 	[HideInInspector] public int enemyCurrentHP;
 	[HideInInspector] public float enemyCurrentPosture;
 
-	private IEnumerator Start()
+	private void Awake()
 	{
 		enemySprite = GetComponent<SpriteRenderer>();
 		ninjaPlayer = FindAnyObjectByType<NinjaController>();
@@ -63,60 +63,66 @@ public class EnemyScript : MonoBehaviour
 
 		rightAttackWarning.SetActive(false);
 		leftAttackWarning.SetActive(false);
-		//if (enemyCurrentHP <= 0) //Inicia a animação do inimigo derrubado caso a vida dele chegue a 0
-		//	animator.SetBool("isDown", true);
-		while (true)
+
+		StartCoroutine(EnemyRoutine());
+	}
+
+	private IEnumerator EnemyRoutine()
+	{
+		if (enemyCurrentPosture >= enemyMaxPosture)
 		{
-			if (enemyCurrentPosture >= enemyMaxPosture)
-				postureLimit = true;
+			postureLimit = true;
+			enemyCurrentPosture = enemyMaxPosture;
+		}
 
-			if (!gameManager.stopGame && !postureLimit)
+
+		if (!gameManager.stopGame && !postureLimit)
+		{
+
+			attack = false;
+			actionPeriod = Random.Range(minActionPeriod, maxActionPeriod);
+
+			if (!attack && ninjaPlayer.isPunching && !gameManager.stopGame && enemyActionAvaliable)
 			{
-
-				attack = false;
-				actionPeriod = Random.Range(minActionPeriod, maxActionPeriod);
-
-				if (!attack && ninjaPlayer.isPunching && !gameManager.stopGame && enemyActionAvaliable)
-				{
-					defense = true;
-					enemyActionAvaliable = false;
-					StartCoroutine(EnemyBlock());
-				}
-
-				yield return new WaitForSeconds(actionPeriod);
-
-				if (defense == false && Random.Range(0, 100) > attackProbability && !gameManager.stopGame && enemyActionAvaliable)
-				{
-					attack = true;
-					enemyActionAvaliable = false;
-					StartCoroutine(EnemyAttack());
-				}
+				defense = true;
+				enemyActionAvaliable = false;
+				StartCoroutine(EnemyBlock());
 			}
-			if (enemyPostureReduction)
+
+			yield return new WaitForSeconds(actionPeriod);
+
+			if (defense == false && Random.Range(0, 100) > attackProbability && !gameManager.stopGame && enemyActionAvaliable)
 			{
-				timer -= Time.deltaTime;
+				attack = true;
+				enemyActionAvaliable = false;
+				StartCoroutine(EnemyAttack());
+			}
+		}
+		if (enemyPostureReduction)
+		{
+			timer -= Time.deltaTime;
 
-				if (timer < 0)
+			if (timer < 0)
+			{
+				if (postureLimit)
 				{
-					if (postureLimit)
-					{
-						timer = 0;
-						enemyCurrentPosture -= 8f * Time.deltaTime;
-						enemyPostureBar.SetPosture(enemyCurrentPosture);
+					timer = 0;
+					enemyCurrentPosture -= 8f * Time.deltaTime;
+					enemyPostureBar.SetPosture(enemyCurrentPosture);
 
-						if (enemyCurrentPosture <= 78)
-							postureLimit = false;
-					}
-					else
-					{
-						timer = 0;
-						enemyCurrentPosture -= 5.5f * Time.deltaTime;
-						enemyPostureBar.SetPosture(enemyCurrentPosture);
-					}
+					if (enemyCurrentPosture <= 78)
+						postureLimit = false;
+				}
+				else
+				{
+					timer = 0;
+					enemyCurrentPosture -= 5.5f * Time.deltaTime;
+					enemyPostureBar.SetPosture(enemyCurrentPosture);
 				}
 			}
 		}
-		
+
+		StartCoroutine(EnemyRoutine());
 	}
 
 	//Ataque do inimigo

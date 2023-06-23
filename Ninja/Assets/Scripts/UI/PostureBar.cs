@@ -29,27 +29,4 @@ public class PostureBar : MonoBehaviour
 	{
 		postureSlider.value = newPosture;
 	}
-
-	//void PostureTimer()
-	//{
-	//	currentTime = startTime; 
-	//	currentTime -= timeDecreaseAmount * Time.deltaTime;
-
-	//	//if(currentTime <= 0)
-	//	//{
-	//	//	do
-	//	//	{
-	//	//		if (isPlayer && !isEnemy)
-	//	//		{
-	//	//			yield return new WaitForSeconds(1f);
-	//	//		}
-					
-	//	//		else if (isEnemy && !isPlayer)
-	//	//		{
-	//	//			yield return new WaitForSeconds(1f);
-	//	//		}
-	//	//	} while (FindAnyObjectByType<NinjaController>().isPunching == true);
-	//	//}
-	//}
-
 }
